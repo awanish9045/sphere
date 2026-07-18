@@ -418,58 +418,6 @@
       100% { opacity: 0.7; }
     }
 
-    /* On-Screen Charge Ring HUD */
-    #charge-hud {
-      position: absolute;
-      width: 90px;
-      height: 90px;
-      z-index: 5;
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #charge-hud.active {
-      opacity: 1;
-    }
-
-    #charge-hud svg {
-      transform: rotate(-90deg);
-      width: 100%;
-      height: 100%;
-      filter: drop-shadow(0 0 8px var(--theme-color-glow));
-    }
-
-    #charge-hud circle {
-      fill: none;
-      stroke-width: 3;
-    }
-
-    #charge-hud .ring-bg {
-      stroke: rgba(255, 255, 255, 0.06);
-    }
-
-    #charge-hud .ring-progress {
-      stroke: var(--theme-color);
-      stroke-linecap: round;
-      stroke-dasharray: 220; /* 2 * PI * 35 */
-      stroke-dashoffset: 220;
-      transition: stroke-dashoffset 0.1s ease, stroke 0.3s;
-    }
-
-    #charge-hud .charge-value {
-      position: absolute;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      color: #ffffff;
-      text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
-    }
-
     /* Mobile Responsiveness */
     @media (max-width: 768px) {
       .hud-layer {
@@ -530,15 +478,6 @@
   <!-- Three.js Canvas Container -->
   <div id="canvas-container"></div>
 
-  <!-- Realtime On-Hand HUD for Pinch Charging -->
-  <div id="charge-hud">
-    <svg viewBox="0 0 80 80">
-      <circle class="ring-bg" cx="40" cy="40" r="35"></circle>
-      <circle class="ring-progress" id="charge-hud-progress" cx="40" cy="40" r="35"></circle>
-    </svg>
-    <div class="charge-value" id="charge-hud-value">0%</div>
-  </div>
-
   <!-- Elegant Loading Screen -->
   <div id="loader">
     <div class="loader-title">A E T H E R</div>
@@ -562,6 +501,7 @@
 
     <!-- Mini skeleton tracking monitor (Bottom-Left) -->
     <div class="mini-monitor-panel glass-panel interactive">
+      <div id="monitor-charge-text" style="position: absolute; top: 6px; right: 10px; font-size: 0.75rem; font-weight: 600; color: #ef4444; z-index: 10; display: none; text-shadow: 0 0 5px rgba(0,0,0,0.8);">0%</div>
       <canvas id="mini-monitor" width=100% height=100%></canvas>
       <div class="monitor-label">
         <span class="status-dot pulsing" id="monitor-dot" style="background-color: #ef4444; box-shadow: 0 0 10px #ef4444;"></span>
@@ -717,9 +657,7 @@
     const miniCtx = miniMonitor.getContext('2d');
     const loader = document.getElementById('loader');
     const loaderStatus = document.getElementById('loader-status');
-    const chargeHud = document.getElementById('charge-hud');
-    const chargeHudProgress = document.getElementById('charge-hud-progress');
-    const chargeHudValue = document.getElementById('charge-hud-value');
+    const monitorChargeText = document.getElementById('monitor-charge-text');
     
     // UI buttons and diagnostics
     const btnWebcam = document.getElementById('btn-webcam');
@@ -1101,20 +1039,10 @@
 
       // Update Screen Charge HUD UI position and values
       if (appState === STATE_CHARGING) {
-        chargeHud.classList.add('active');
-        
-        // Set HUD coordinates to track hand screen space coordinates
-        const rawScreenX = (1 - centerX) * window.innerWidth;
-        const rawScreenY = centerY * window.innerHeight;
-        chargeHud.style.left = `${rawScreenX}px`;
-        chargeHud.style.top = `${rawScreenY}px`;
-        
-        // Progress Ring dashoffset animation (radius is 35, circumference is 220)
-        const offset = 220 - (chargeProgress * 220);
-        chargeHudProgress.style.strokeDashoffset = offset;
-        chargeHudValue.textContent = `${Math.round(chargeProgress * 100)}%`;
+        monitorChargeText.style.display = 'block';
+        monitorChargeText.textContent = `${Math.round(chargeProgress * 100)}%`;
       } else {
-        chargeHud.classList.remove('active');
+        monitorChargeText.style.display = 'none';
       }
 
       // Two Hands Zoom & Scaling
